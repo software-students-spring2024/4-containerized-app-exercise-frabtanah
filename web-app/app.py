@@ -1,10 +1,11 @@
+"""This module contains the web routes and logic for a Flask web application."""
+
 import os
 import datetime
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, session
 import pymongo
 #from pymongo.server_api import ServerApi
 import bcrypt
-from bson.objectid import ObjectId
 from dotenv import load_dotenv
 
 # load credentials and configuration options from .env file
@@ -12,18 +13,11 @@ load_dotenv()  # take environment variables from .env.
 
 # instantiate the app
 app = Flask(__name__)
-# bcrypt = Bcrypt(app) 
-
-
-
-
 
 # connect to the database
 cxn = pymongo.MongoClient(os.getenv("MONGO_URI"))
 db = cxn[os.getenv("MONGO_DBNAME")]
 app.secret_key = os.environ.get('SECRET_KEY', 'default_secret_key')
-
-
 
 @app.route("/")
 def home():
@@ -33,7 +27,6 @@ def home():
     if 'email' in session:
         return render_template("landing.html", logged_in=True)
     return render_template("landing.html", logged_in=False)
-
 
 @app.route('/sign_up')
 def show_signup():
@@ -51,21 +44,27 @@ def show_signin():
 
 @app.route('/profile')
 def profile():
+    """
+    profile
+    """
     if 'email' in session:
         user = db.users.find_one({"email": session['email']})
         return render_template('profile.html', user=user)
-    else:
-        return redirect(url_for('show_signin'))
+
+    return redirect(url_for('show_signin'))
 
 
 @app.route("/sign_in", methods=["POST"])
 def sign_in():
+    """
+    sign in
+    """
     email = request.form.get('email')
-    password = request.form.get('password').encode('utf-8') 
+    password = request.form.get('password').encode('utf-8')
 
     if not all([email, password]):
         return redirect(url_for('show_signin'))
-    
+
     user = db.users.find_one({"email": email})
     if user:
         hashed_password = user.get('password')
@@ -81,16 +80,11 @@ def sign_in():
         error_message = "Credentials not found."
         return render_template("sign_in.html", error=error_message)
 
-
-
-
-
 @app.route("/sign_up", methods=["POST"])
 def sign_up():
     """
     Post route for user creation of their user
     """
-
     email = request.form.get('email')
     password = request.form.get('password')
     full_name = request.form.get('full_name')
@@ -121,7 +115,7 @@ def sign_up():
 
     return redirect(url_for('assessment'))
 
-    
+
 @app.route('/logout')
 def logout():
     """
@@ -138,7 +132,7 @@ def delete_profile():
     if 'email' in session:
         email = session['email']
         db.users.delete_one({'email': email})
-        session.pop('email', None)  
+        session.pop('email', None)
         return redirect(url_for('home'))
     else:
         return redirect(url_for('home'))
@@ -152,11 +146,10 @@ def show_change_password():
     return render_template("change_password.html")
 
 @app.route("/change_pass", methods=['POST'])
-def change_pass(): 
+def change_pass():
     """
     Update the user password 
     """
-
     new_password = request.form['password']
     confirm_password = request.form['confirm_password']
 
@@ -177,15 +170,13 @@ def change_pass():
 
             db.users.update_one({'email': email}, {'$set': {'password': hashed_password}})
 
-            return redirect(url_for('profile'))  
+            return redirect(url_for('profile'))
         else:
             error_message = "User not found."
             return render_template("change_password.html", error=error_message)
     else:
         error_message = "User is not logged in."
         return render_template("login.html", error=error_message)
-
-    
 
 @app.route("/assessments")
 def assessments():
@@ -204,11 +195,12 @@ def assessments():
     else:
         error_message = "User is not logged in."
         return render_template("sign_in.html", error=error_message)
-    
-
 
 @app.route('/assessment')
 def show_assessment():
+    """
+    shows assessment
+    """
     if 'email' in session:
         return render_template("assessment.html")
     return redirect(url_for('show_signin'))
@@ -218,7 +210,6 @@ def assessment():
     """
     Route to input mood assessment
     """
-
     if 'email' in session:
         email = session['email']
         user = db.users.find_one({'email': email})
@@ -228,7 +219,6 @@ def assessment():
             sub_emotion = request.form["sub-emotion"]
             post_activity = request.form["post-activity"]
             current_date = datetime.datetime.now().strftime("%Y-%m-%d")
-
 
             if not main_emotion or not sub_emotion or not post_activity:
                 return render_template("assessment.html", error="Please enter all fields")
@@ -250,19 +240,6 @@ def assessment():
         else:
             return "User not found."
 
-    
-    
-
-
-
-
-
-
-
-
-
 if __name__ == "__main__":
     FLASK_PORT = os.getenv("FLASK_PORT", "5000")
-
-  
     app.run(port=FLASK_PORT)
