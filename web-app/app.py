@@ -50,7 +50,6 @@ def profile():
     if 'email' in session:
         user = db.users.find_one({"email": session['email']})
         return render_template('profile.html', user=user)
-
     return redirect(url_for('show_signin'))
 
 
@@ -72,13 +71,12 @@ def sign_in():
         if bcrypt.checkpw(password, hashed_password):
             session['email'] = user['email']
             return redirect(url_for('assessment'))
-        else:
-            error_message = "Wrong Pass."
-            return render_template("sign_in.html", error=error_message)
 
-    else:
-        error_message = "Credentials not found."
+        error_message = "Wrong Pass."
         return render_template("sign_in.html", error=error_message)
+
+    error_message = "Credentials not found."
+    return render_template("sign_in.html", error=error_message)
 
 @app.route("/sign_up", methods=["POST"])
 def sign_up():
@@ -134,9 +132,7 @@ def delete_profile():
         db.users.delete_one({'email': email})
         session.pop('email', None)
         return redirect(url_for('home'))
-    else:
-        return redirect(url_for('home'))
-
+    return redirect(url_for('home'))
 
 @app.route("/change_password")
 def show_change_password():
@@ -165,36 +161,34 @@ def change_pass():
         email = session['email']
         user = db.users.find_one({'email': email})
 
-        if user:
-            hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
-
-            db.users.update_one({'email': email}, {'$set': {'password': hashed_password}})
-
-            return redirect(url_for('profile'))
-        else:
+        if not user:
             error_message = "User not found."
             return render_template("change_password.html", error=error_message)
-    else:
-        error_message = "User is not logged in."
-        return render_template("login.html", error=error_message)
+
+        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+        db.users.update_one({'email': email}, {'$set': {'password': hashed_password}})
+        return redirect(url_for('profile'))
+
+    error_message = "User is not logged in."
+    return render_template("login.html", error=error_message)
 
 @app.route("/assessments")
 def assessments():
     """
     Display user assessments
     """
-    if 'email' in session:
-        email = session['email']
-        user = db.users.find_one({'email': email})
-
-        if user and 'assessments' in user:
-            return render_template("assessments.html", assessments=user['assessments'])
-        else:
-            error_message = "No assessments found."
-            return render_template("assessments.html", error=error_message)
-    else:
+    if 'email' not in session:
         error_message = "User is not logged in."
         return render_template("sign_in.html", error=error_message)
+
+    email = session['email']
+    user = db.users.find_one({'email': email})
+
+    if user and 'assessments' in user:
+        return render_template("assessments.html", assessments=user['assessments'])
+
+    error_message = "No assessments found."
+    return render_template("assessments.html", error=error_message)
 
 @app.route('/assessment')
 def show_assessment():
@@ -237,8 +231,8 @@ def assessment():
 
             return redirect(url_for('profile'))
 
-        else:
-            return "User not found."
+    error_message = "User not found."
+    return render_template("assessment.html", error=error_message)
 
 if __name__ == "__main__":
     FLASK_PORT = os.getenv("FLASK_PORT", "5000")
