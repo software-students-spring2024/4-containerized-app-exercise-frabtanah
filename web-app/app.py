@@ -9,6 +9,10 @@ import pymongo
 import bcrypt
 from dotenv import load_dotenv
 
+#image imports
+import base64
+from bson import binary
+
 # load credentials and configuration options from .env file
 load_dotenv()  # take environment variables from .env.
 
@@ -23,20 +27,42 @@ app.secret_key = os.environ.get("SECRET_KEY", "default_secret_key")
 @app.route('/save_picture', methods=['POST'])
 def save_picture():
     """
-    route to save picture
+    route to save the picture
     """
     if "email" not in session:
+        flash("You must be logged in to save a picture.", "error")
         return redirect(url_for('show_signin'))
-    
+
     image_data = request.form['image']
-    # process or save image to db here, but for now just redirect to profile
-    flash('Picture saved successfully!', 'success')
-    return redirect(url_for('profile'))
+    if image_data:
+        # Strip the header from the image data
+        header, encoded = image_data.split(",", 1)
+        data = base64.b64decode(encoded)
+
+        # Create a new assessment entry with the image
+        current_date = datetime.datetime.now().strftime("%Y-%m-%d")  # Format date as a string
+        new_assessment = {
+            "image_data": binary.Binary(data),
+            "currentDate": current_date  # Use the same key as in written assessments
+        }
+        # Update the user's document by pushing a new assessment into the assessments array
+        db.users.update_one(
+            {"email": session['email']},
+            {"$push": {"assessments": new_assessment}}
+        )
+
+        flash('Picture saved successfully!', 'success')
+        return redirect(url_for('assessments'))
+    else:
+        flash('No picture to save.', 'error')
+        return redirect(url_for('picture'))
 
 @app.route('/picture')
 def picture():
+    """
+    display picture taking page
+    """
     return render_template('picture.html')
-
 
 @app.route("/")
 def home():
@@ -194,23 +220,39 @@ def change_pass():
     return render_template("login.html", error=error_message)
 
 
-@app.route("/assessments")
+@app.route('/assessments')
 def assessments():
     """
-    Display user assessments
+    route to show assessments
     """
     if "email" not in session:
-        error_message = "User is not logged in."
-        return render_template("sign_in.html", error=error_message)
+        flash("You must be logged in to view assessments.", "error")
+        return redirect(url_for('show_signin'))
 
-    email = session["email"]
+    email = session['email']
     user = db.users.find_one({"email": email})
 
+    assessments_list = []
     if user and "assessments" in user:
-        return render_template("assessments.html", assessments=user["assessments"])
+        for assessment in user['assessments']:
+            #check if the assessment is an image or text
+            if 'image_data' in assessment:
+                image_b64 = base64.b64encode(assessment['image_data']).decode('utf-8')
+                assessments_list.append({
+                    'type': 'image',
+                    'image_b64': image_b64,
+                    'currentDate': assessment['currentDate']
+                })
+            else:
+                assessments_list.append({
+                    'type': 'text',
+                    'mainEmotion': assessment['mainEmotion'],
+                    'subEmotion': assessment['subEmotion'],
+                    'postActivity': assessment['postActivity'],
+                    'currentDate': assessment['currentDate']
+                })
 
-    error_message = "No assessments found."
-    return render_template("assessments.html", error=error_message)
+    return render_template('assessments.html', assessments=assessments_list)
 
 
 @app.route("/assessment")
