@@ -8,23 +8,31 @@
 </head>
 <body>
     <div class="container mt-5">
-        {% if error %}
-            <div class="alert alert-danger" role="alert">
-                {{ error }}
-            </div>
-        {% else %}
+        {% if assessments %}
             <h2>Previous User Assessments</h2>
             <div class="list-group">
                 {% for assessment in assessments %}
-                    <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
+                    <div class="list-group-item list-group-item-action flex-column align-items-start">
                         <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">{{ assessment.mainEmotion }}</h5>
-                            <small>{{assessment.currentDate }}</small>
+                            {% if assessment.type == 'text' %}
+                                <h5 class="mb-1">{{ assessment.mainEmotion }}</h5>
+                                <small>{{ assessment.currentDate }}</small>
+                            {% elif assessment.type == 'image' %}
+                                <h5 class="mb-1">Image from {{ assessment.currentDate }}</h5>
+                            {% endif %}
                         </div>
-                        <p class="mb-1">{{ assessment.subEmotion }}</p>
-                        <small>{{ assessment.postActivity }}</small>
-                    </a>
+                        {% if assessment.type == 'text' %}
+                            <p class="mb-1">{{ assessment.subEmotion }}</p>
+                            <small>{{ assessment.postActivity }}</small>
+                        {% elif assessment.type == 'image' %}
+                            <img src="data:image/png;base64,{{ assessment.image_b64 }}" alt="User mood image" class="img-fluid">
+                        {% endif %}
+                    </div>
                 {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info" role="alert">
+                No assessments found.
             </div>
         {% endif %}
     </div>
