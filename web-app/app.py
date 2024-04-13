@@ -2,7 +2,7 @@
 
 import os
 import datetime
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, flash, url_for, session
 import pymongo
 
 # from pymongo.server_api import ServerApi
@@ -19,6 +19,23 @@ app = Flask(__name__)
 cxn = pymongo.MongoClient(os.getenv("MONGO_URI"))
 db = cxn[os.getenv("MONGO_DBNAME")]
 app.secret_key = os.environ.get("SECRET_KEY", "default_secret_key")
+
+@app.route('/save_picture', methods=['POST'])
+def save_picture():
+    """
+    route to save picture
+    """
+    if "email" not in session:
+        return redirect(url_for('show_signin'))
+    
+    image_data = request.form['image']
+    # process or save image to db here, but for now just redirect to profile
+    flash('Picture saved successfully!', 'success')
+    return redirect(url_for('profile'))
+
+@app.route('/picture')
+def picture():
+    return render_template('picture.html')
 
 
 @app.route("/")

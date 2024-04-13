@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Take a Picture</title>
+    <link rel="stylesheet" href="/static/picture.css"> 
+</head>
+<body>
+    <h1>Take a Picture</h1>
+    <div id="camera">
+        <video id="video" width="640" height="480" autoplay></video>
+        <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+    </div>
+    <button id="snap">Capture</button>
+    <button id="retake" style="display:none;">Retake Photo</button>
+    <form method="POST" action="/save_picture" style="display:none;">
+        <input type="hidden" name="image" id="imageData">
+        <button type="submit">Save Picture</button>
+    </form>
+
+    <script>
+        //access the camera
+        if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+                var video = document.getElementById('video');
+                video.srcObject = stream;
+                video.play();
+            }).catch(function(error) {
+                console.log("Error accessing the camera: ", error);
+            });
+        }
+
+        //elements for taking the snapshot
+        var canvas = document.getElementById('canvas');
+        var context = canvas.getContext('2d');
+        var video = document.getElementById('video');
+        var snapButton = document.getElementById('snap');
+        var retakeButton = document.getElementById('retake');
+        var form = document.querySelector('form');
+
+        //trigger photo take
+        snapButton.addEventListener('click', function() {
+            context.drawImage(video, 0, 0, 640, 480);
+            var imageData = canvas.toDataURL('image/png');
+            document.getElementById('imageData').value = imageData;
+
+            //hide the video and show the canvas
+            video.style.display = 'none';
+            canvas.style.display = 'block';
+            snapButton.style.display = 'none';
+            retakeButton.style.display = 'inline';
+            form.style.display = 'block';
+        });
+
+        //retake photo
+        retakeButton.addEventListener('click', function() {
+            video.style.display = 'block';
+            canvas.style.display = 'none';
+            snapButton.style.display = 'inline';
+            this.style.display = 'none';
+            form.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
