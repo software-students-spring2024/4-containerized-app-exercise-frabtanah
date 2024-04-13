@@ -9,7 +9,7 @@ import pymongo
 import bcrypt
 from dotenv import load_dotenv
 
-#image imports
+# image imports
 import base64
 from bson import binary
 
@@ -35,17 +35,17 @@ def save_picture():
 
     image_data = request.form['image']
     if image_data:
-        # Strip the header from the image data
+        #strip the header from the image data
         header, encoded = image_data.split(",", 1)
         data = base64.b64decode(encoded)
 
-        # Create a new assessment entry with the image
-        current_date = datetime.datetime.now().strftime("%Y-%m-%d")  # Format date as a string
+        #new assessment entry with the image
+        current_date = datetime.datetime.now().strftime("%Y-%m-%d") 
         new_assessment = {
             "image_data": binary.Binary(data),
-            "currentDate": current_date  # Use the same key as in written assessments
+            "currentDate": current_date  
         }
-        # Update the user's document by pushing a new assessment into the assessments array
+        #pusha new assessment into the assessments array
         db.users.update_one(
             {"email": session['email']},
             {"$push": {"assessments": new_assessment}}
