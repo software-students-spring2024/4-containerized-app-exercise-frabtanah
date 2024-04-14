@@ -1,8 +1,8 @@
 version: '3'
 
 services:
-  web-app:
-    build: ./web-app
+  web_app:
+    build: ./web_app
     ports:
       - "8000:5000"
     environment:
@@ -12,7 +12,7 @@ services:
       - FLASK_ENV=development
       - FLASK_PORT=8000
     env_file:
-      - ./web-app/.env
+      - ./web_app/.env
     depends_on:
       - mongodb
     networks:
@@ -31,7 +31,9 @@ services:
       - mongodb-data:/data/db
 
   mlclient:
-    build: ./machine-learning-client
+    build: ./machine_learning_client
+    env_file:
+      - ./machine_learning_client/.env
     networks:
       - my_network
 volumes:
