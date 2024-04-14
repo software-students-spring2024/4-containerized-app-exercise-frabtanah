@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  web-app:
+    build: ./web-app
+    ports:
+      - "5500:5500"
+    networks:
+      - my_network
+
+  mlclient:
+    build: ./machine-learning-client
+    networks:
+      - my_network
+
+networks:
+  my_network:
