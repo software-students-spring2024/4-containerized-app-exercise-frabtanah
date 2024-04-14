@@ -4,14 +4,14 @@ body{
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    height: 95vh;
     margin: 0;
 }
 
 .password-form-container {
     text-align: center;
     background-color: #fff; 
-    padding: 20px;
+    padding: 19px;
     border-radius: 15px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     width: 100%;
@@ -23,7 +23,7 @@ body{
 }
 
 .input-field {
-    width: calc(100% - 20px);
+    width: calc(100% - 19px);
     padding: 10px;
     margin: 5px;
     border: 1px solid #ccc;
@@ -35,14 +35,14 @@ body{
     display: flex; 
     flex-direction: column; 
     align-items: center; 
-    padding: 10px; 
+    padding: 9px; 
 }
 
 .action-button {
     background-color: #4CAF50; 
     border: none;
     color: white; 
-    padding: 10px 20px;
+    padding: 11px 19px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
@@ -55,6 +55,5 @@ body{
 }
 
 .action-button:hover {
-    background-color: #45a049; 
-    color: white;
+    background-color: #45a048; 
 }
