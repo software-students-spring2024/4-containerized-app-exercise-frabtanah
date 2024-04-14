@@ -55,7 +55,6 @@ img_array = tf.expand_dims(img_array, 0) # Create a batch
 predictions = model.predict(img_array)
 score = tf.nn.softmax(predictions[0])
 
-=======
 class_names = train_ds.class_names
 print(class_names)
 

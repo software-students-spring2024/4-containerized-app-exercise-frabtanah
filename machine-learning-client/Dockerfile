@@ -15,4 +15,4 @@ ADD . .
 
 
 # Run app.py when the container launches
-CMD [ "python3", "train_v2.py"]
+CMD [ "python3", "model.py"]
