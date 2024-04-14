@@ -1,6 +1,20 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import PIL
+import pymongo
+import os
+import datetime
+from flask import Flask, render_template, request, redirect, flash, url_for, session
+import pymongo
+
+# from pymongo.server_api import ServerApi
+import bcrypt
+from dotenv import load_dotenv
+
+# image imports
+import base64
+from bson import binary
+
 import tensorflow as tf
 
 from tensorflow import keras
@@ -9,7 +23,6 @@ from tensorflow.keras.models import Sequential, load_model
 
 import pathlib
 
-import os
 # Path to the saved model
 model_path = './recog.keras'
 
@@ -21,12 +34,42 @@ img_width = 180
 
 class_names = ["Angry", "Happy", "Neutral", "Sad", "Surprise"]
 
-<<<<<<< HEAD
+#---------------------------------------------------------------
+
+# load credentials and configuration options from .env file
+load_dotenv()  # take environment variables from .env.
+
 # Connect to MongoDB
 # connect to the database
 cxn = pymongo.MongoClient(os.getenv("MONGO_URI"))
 db = cxn[os.getenv("MONGO_DBNAME")]
-app.secret_key = os.environ.get("SECRET_KEY", "default_secret_key")
+# app.secret_key = os.environ.get("SECRET_KEY", "default_secret_key")
+
+
+def fetch_and_predict(image_id):
+    # Fetch an image from MongoDB using its ID
+    image_data = db.users.find_one({'_id': image_id})
+    if not image_data:
+        return "Image not found"
+
+    # Assuming image data is stored as binary data in the 'image' field
+    image_bytes = image_data['image']
+    image = Image.open(io.BytesIO(image_bytes))
+    image = image.resize((img_height, img_width))
+    image = image.convert('RGB')  # Ensure image is in RGB format
+
+    # Convert image to a numpy array suitable for TensorFlow
+    img_array = np.array(image)
+    img_array = np.expand_dims(img_array, axis=0)  # Create a batch
+
+    # Prediction
+    predictions = model.predict(img_array)
+    score = tf.nn.softmax(predictions[0])
+    class_names = ['class1', 'class2', 'class3']  # Update as per your model classes
+
+    predicted_class = class_names[np.argmax(score)]
+    confidence = np.max(score) * 100
+    return f"This image most likely belongs to {predicted_class} with a {confidence:.2f}% confidence."
 
 
 if user and "assessments" in user:
@@ -55,100 +98,7 @@ img_array = tf.expand_dims(img_array, 0) # Create a batch
 predictions = model.predict(img_array)
 score = tf.nn.softmax(predictions[0])
 
-class_names = train_ds.class_names
-print(class_names)
-
-angry_path = "test_photos/angry_guy.jpg"
-
-img = tf.keras.utils.load_img(
-    angry_path, target_size=(img_height, img_width)
-)
-img_array = tf.keras.utils.img_to_array(img)
-img_array = tf.expand_dims(img_array, 0) # Create a batch
-
-predictions = model.predict(img_array)
-score = tf.nn.softmax(predictions[0])
-
->>>>>>> c0df528c6bd91173a82466f5f899d8445f80d050
 print(
     "This image most likely belongs to {} with a {:.2f} percent confidence."
     .format(class_names[np.argmax(score)], 100 * np.max(score))
 )
-<<<<<<< HEAD
-# ############
-=======
-############
->>>>>>> c0df528c6bd91173a82466f5f899d8445f80d050
-
-smile_path = "test_photos/test1.jpg"
-
-img = tf.keras.utils.load_img(
-    smile_path, target_size=(img_height, img_width)
-)
-img_array = tf.keras.utils.img_to_array(img)
-img_array = tf.expand_dims(img_array, 0) # Create a batch
-
-predictions = model.predict(img_array)
-score = tf.nn.softmax(predictions[0])
-
-print(
-    "This image most likely belongs to {} with a {:.2f} percent confidence."
-    .format(class_names[np.argmax(score)], 100 * np.max(score))
-)
-
-#########
-
-
-surprise_path = "test_photos/surprise.jpg"
-
-img = tf.keras.utils.load_img(
-    surprise_path, target_size=(img_height, img_width)
-)
-img_array = tf.keras.utils.img_to_array(img)
-img_array = tf.expand_dims(img_array, 0) # Create a batch
-
-predictions = model.predict(img_array)
-score = tf.nn.softmax(predictions[0])
-
-print(
-    "This image most likely belongs to {} with a {:.2f} percent confidence."
-    .format(class_names[np.argmax(score)], 100 * np.max(score))
-)
-############
-
-
-
-sad_path = "test_photos/sad_test.jpg"
-
-img = tf.keras.utils.load_img(
-    sad_path, target_size=(img_height, img_width)
-)
-img_array = tf.keras.utils.img_to_array(img)
-img_array = tf.expand_dims(img_array, 0) # Create a batch
-
-predictions = model.predict(img_array)
-score = tf.nn.softmax(predictions[0])
-
-print(
-    "This image most likely belongs to {} with a {:.2f} percent confidence."
-    .format(class_names[np.argmax(score)], 100 * np.max(score))
-)
-############
-
-
-neutral_path = "test_photos/neutral_test.jpg"
-
-img = tf.keras.utils.load_img(
-    neutral_path, target_size=(img_height, img_width)
-)
-img_array = tf.keras.utils.img_to_array(img)
-img_array = tf.expand_dims(img_array, 0) # Create a batch
-
-predictions = model.predict(img_array)
-score = tf.nn.softmax(predictions[0])
-
-print(
-    "This image most likely belongs to {} with a {:.2f} percent confidence."
-    .format(class_names[np.argmax(score)], 100 * np.max(score))
-)
-###########
