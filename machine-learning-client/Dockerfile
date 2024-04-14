@@ -2,7 +2,7 @@
 FROM tensorflow/tensorflow:latest
 
 # Set the working directory in the image
-WORKDIR /mlclient
+WORKDIR /app
 
 # install dependencies into the image - doing this first will speed up subsequent builds, as Docker will cache this step
 
