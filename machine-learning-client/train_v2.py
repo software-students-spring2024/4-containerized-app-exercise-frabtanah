@@ -9,6 +9,7 @@ from tensorflow.keras.models import Sequential
 
 import pathlib
 
+print("TESTING DOCKER")
 
 data_dir = "training_two/"
 data_dir = pathlib.Path(data_dir).with_suffix('')
@@ -73,7 +74,7 @@ model.compile(optimizer='adam',
 
 model.summary()
 
-epochs=10
+epochs=1
 history = model.fit(
   train_ds,
   validation_data=val_ds,
