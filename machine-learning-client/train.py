@@ -40,9 +40,13 @@ img_width = 224
 
 for folder in os.listdir(data_dir):
     fold = os.path.join(data_dir, folder)
-    for img in os.listdir(fold):
-        pathimg = os.path.join(fold, img)
-        image = preprocess_image(pathimg, img_height, img_width)
+
+    if os.path.isdir(fold):
+        for img in os.listdir(fold):
+
+            if img.endswith(".jpg"):
+                pathimg = os.path.join(fold, img)
+                image = preprocess_image(pathimg, img_height, img_width)
 
 kds = tf.keras.preprocessing.image_dataset_from_directory(
     data_dir,

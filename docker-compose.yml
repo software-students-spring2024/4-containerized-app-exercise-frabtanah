@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  web-app:
+    build: ./web-app
+    ports:
+      - "8000:5000"
+    environment:
+      - MONGO_DBNAME=example
+      - MONGO_URI=mongodb://localhost:27017/example
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - FLASK_PORT=8000
+    env_file:
+      - ./web-app/.env
+    depends_on:
+      - mongodb
+    networks:
+      - my_network
+
+  mongodb:
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=secret
+    image: mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb-data:/data/db
+
+  mlclient:
+    build: ./machine-learning-client
+    networks:
+      - my_network
+volumes:
+  mongodb-data:
+
+networks:
+  my_network:
+
+
