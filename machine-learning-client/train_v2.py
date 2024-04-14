@@ -8,7 +8,7 @@ from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 
 import pathlib
-
+import os
 print("TESTING DOCKER")
 
 data_dir = "training_two/"
@@ -81,119 +81,26 @@ history = model.fit(
   epochs=epochs
 )
 
+model.save("./recog.keras")
 
-acc = history.history['accuracy']
-val_acc = history.history['val_accuracy']
+# acc = history.history['accuracy']
+# val_acc = history.history['val_accuracy']
 
-loss = history.history['loss']
-val_loss = history.history['val_loss']
+# loss = history.history['loss']
+# val_loss = history.history['val_loss']
 
-epochs_range = range(epochs)
+# epochs_range = range(epochs)
 
-plt.figure(figsize=(8, 8))
-plt.subplot(1, 2, 1)
-plt.plot(epochs_range, acc, label='Training Accuracy')
-plt.plot(epochs_range, val_acc, label='Validation Accuracy')
-plt.legend(loc='lower right')
-plt.title('Training and Validation Accuracy')
+# plt.figure(figsize=(8, 8))
+# plt.subplot(1, 2, 1)
+# plt.plot(epochs_range, acc, label='Training Accuracy')
+# plt.plot(epochs_range, val_acc, label='Validation Accuracy')
+# plt.legend(loc='lower right')
+# plt.title('Training and Validation Accuracy')
 
-plt.subplot(1, 2, 2)
-plt.plot(epochs_range, loss, label='Training Loss')
-plt.plot(epochs_range, val_loss, label='Validation Loss')
-plt.legend(loc='upper right')
-plt.title('Training and Validation Loss')
-plt.show()
-
-
-
-
-
-angry_path = "test_photos/angry_guy.jpg"
-
-img = tf.keras.utils.load_img(
-    angry_path, target_size=(img_height, img_width)
-)
-img_array = tf.keras.utils.img_to_array(img)
-img_array = tf.expand_dims(img_array, 0) # Create a batch
-
-predictions = model.predict(img_array)
-score = tf.nn.softmax(predictions[0])
-
-print(
-    "This image most likely belongs to {} with a {:.2f} percent confidence."
-    .format(class_names[np.argmax(score)], 100 * np.max(score))
-)
-############
-
-smile_path = "test_photos/test1.jpg"
-
-img = tf.keras.utils.load_img(
-    smile_path, target_size=(img_height, img_width)
-)
-img_array = tf.keras.utils.img_to_array(img)
-img_array = tf.expand_dims(img_array, 0) # Create a batch
-
-predictions = model.predict(img_array)
-score = tf.nn.softmax(predictions[0])
-
-print(
-    "This image most likely belongs to {} with a {:.2f} percent confidence."
-    .format(class_names[np.argmax(score)], 100 * np.max(score))
-)
-
-#########
-
-
-surprise_path = "test_photos/surprise.jpg"
-
-img = tf.keras.utils.load_img(
-    surprise_path, target_size=(img_height, img_width)
-)
-img_array = tf.keras.utils.img_to_array(img)
-img_array = tf.expand_dims(img_array, 0) # Create a batch
-
-predictions = model.predict(img_array)
-score = tf.nn.softmax(predictions[0])
-
-print(
-    "This image most likely belongs to {} with a {:.2f} percent confidence."
-    .format(class_names[np.argmax(score)], 100 * np.max(score))
-)
-############
-
-
-
-sad_path = "test_photos/sad_test.jpg"
-
-img = tf.keras.utils.load_img(
-    sad_path, target_size=(img_height, img_width)
-)
-img_array = tf.keras.utils.img_to_array(img)
-img_array = tf.expand_dims(img_array, 0) # Create a batch
-
-predictions = model.predict(img_array)
-score = tf.nn.softmax(predictions[0])
-
-print(
-    "This image most likely belongs to {} with a {:.2f} percent confidence."
-    .format(class_names[np.argmax(score)], 100 * np.max(score))
-)
-############
-
-
-neutral_path = "test_photos/neutral_test.jpg"
-
-img = tf.keras.utils.load_img(
-    neutral_path, target_size=(img_height, img_width)
-)
-img_array = tf.keras.utils.img_to_array(img)
-img_array = tf.expand_dims(img_array, 0) # Create a batch
-
-predictions = model.predict(img_array)
-score = tf.nn.softmax(predictions[0])
-
-print(
-    "This image most likely belongs to {} with a {:.2f} percent confidence."
-    .format(class_names[np.argmax(score)], 100 * np.max(score))
-)
-############
+# plt.subplot(1, 2, 2)
+# plt.plot(epochs_range, loss, label='Training Loss')
+# plt.plot(epochs_range, val_loss, label='Validation Loss')
+# plt.legend(loc='upper right')
+# plt.title('Training and Validation Loss')
+# plt.show()
