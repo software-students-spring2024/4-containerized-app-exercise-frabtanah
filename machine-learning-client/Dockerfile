@@ -18,4 +18,4 @@ ADD . .
 
 
 # Run app.py when the container launches
-CMD [ "python3", "model.py"]
+CMD [ "python3", "-m", "model.py"]

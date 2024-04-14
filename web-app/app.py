@@ -1,6 +1,12 @@
 """This module contains the web routes and logic for a Flask web application."""
-
+import sys
 import os
+sys.path.insert(0, os.path.abspath('..'))
+
+print(os.path.abspath(".."))
+
+from machine_learning_client import model
+
 import datetime
 from flask import Flask, render_template, request, redirect, flash, url_for, session
 import pymongo
@@ -39,10 +45,13 @@ def save_picture():
         header, encoded = image_data.split(",", 1)
         data = base64.b64decode(encoded)
 
+        emote = model.fetch_and_predict(data)
+
         #new assessment entry with the image
         current_date = datetime.datetime.now().strftime("%Y-%m-%d") 
         new_assessment = {
             "image_data": binary.Binary(data),
+            "emotion_predict": emote,
             "currentDate": current_date  
         }
         #pusha new assessment into the assessments array
@@ -241,6 +250,7 @@ def assessments():
                 assessments_list.append({
                     'type': 'image',
                     'image_b64': image_b64,
+                    'emotion_predict': assessment['emotion_predict'],
                     'currentDate': assessment['currentDate']
                 })
             else:

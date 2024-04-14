@@ -32,6 +32,8 @@ services:
 
   mlclient:
     build: ./machine-learning-client
+    env_file:
+      - ./machine-learning-client/.env
     networks:
       - my_network
 volumes:
