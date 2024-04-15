@@ -1,11 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import PIL
+import requests
+from PIL import Image
 import pymongo
 import os
 import io
 import datetime
-from flask import Flask, render_template, request, redirect, flash, url_for, session
+from flask import Flask, render_template, request, redirect, flash, url_for, session, jsonify
 import pymongo
 
 # from pymongo.server_api import ServerApi
@@ -40,20 +42,26 @@ class_names = ["Angry", "Happy", "Neutral", "Sad", "Surprise"]
 # load credentials and configuration options from .env file
 load_dotenv()  # take environment variables from .env.
 
+app = Flask(__name__)
+
 # Connect to MongoDB
 # connect to the database
 cxn = pymongo.MongoClient(os.getenv("MONGO_URI"))
 db = cxn[os.getenv("MONGO_DBNAME")]
+app.secret_key = os.environ.get("SECRET_KEY", "default_secret_key")
 
-def fetch_and_predict(image_id):
+@app.route('/predict', methods=['POST'])
+def fetch_and_predict():
+    if not request.data:
+        return jsonify({"error": "No data provided"}), 400
+    # file = request.files['image_data']
+
     # Fetch an image from MongoDB using its ID
-    image_data = db.users.find_one({"image_data": binary.Binary(image_id)})
-    if not image_data:
-        return "Image not found"
-
+    # image_data = db.users.find_one({"image_data": binary.Binary(image_id)})
+    
     # Assuming image data is stored as binary data in the 'image' field
-    image_bytes = image_data['image_data']
-    image = image.open(io.BytesIO(image_bytes))
+    image_bytes = request.data
+    image = Image.open(io.BytesIO(image_bytes))
     image = image.resize((img_height, img_width))
     image = image.convert('RGB')  # Ensure image is in RGB format
 
@@ -68,4 +76,8 @@ def fetch_and_predict(image_id):
 
     predicted_class = class_names[np.argmax(score)]
     confidence = np.max(score) * 100
-    return predicted_class
+    return jsonify({"predicted_class": predicted_class, "confidence": confidence})
+
+if __name__ == "__main__":
+    FLASK_PORT = os.getenv("FLASK_PORT", "5000")
+    app.run(port=FLASK_PORT)
