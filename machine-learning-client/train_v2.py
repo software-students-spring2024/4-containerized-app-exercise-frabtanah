@@ -1,77 +1,65 @@
-import matplotlib.pyplot as plt
+"""File for training ML model using TensorFlow and Keras."""
+import pathlib
 import numpy as np
-import PIL
 import tensorflow as tf
-
-from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 
-import pathlib
-import os
-
 print("TESTING DOCKER")
 
-data_dir = "training_two/"
-data_dir = pathlib.Path(data_dir).with_suffix("")
+DATA_DIR = pathlib.Path("training_two/")
+IMAGE_COUNT = len(list(DATA_DIR.glob("*/*.jpg")))
+print(IMAGE_COUNT)
 
-image_count = len(list(data_dir.glob("*/*.jpg")))
-print(image_count)
-
-batch_size = 32
-img_height = 180
-img_width = 180
+BATCH_SIZE = 32
+IMG_HEIGHT = 180
+IMG_WIDTH = 180
 
 train_ds = tf.keras.utils.image_dataset_from_directory(
-    data_dir,
+    DATA_DIR,
     validation_split=0.3,
     subset="training",
     seed=123,
-    image_size=(img_height, img_width),
-    batch_size=batch_size,
+    image_size=(IMG_HEIGHT, IMG_WIDTH),
+    batch_size=BATCH_SIZE,
 )
 
 val_ds = tf.keras.utils.image_dataset_from_directory(
-    data_dir,
+    DATA_DIR,
     validation_split=0.3,
     subset="validation",
     seed=123,
-    image_size=(img_height, img_width),
-    batch_size=batch_size,
+    image_size=(IMG_HEIGHT, IMG_WIDTH),
+    batch_size=BATCH_SIZE,
 )
 
 class_names = train_ds.class_names
 print(class_names)
 
 AUTOTUNE = tf.data.AUTOTUNE
-
 train_ds = train_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
 val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
 
 normalization_layer = layers.Rescaling(1.0 / 255)
-
 normalized_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
 image_batch, labels_batch = next(iter(normalized_ds))
 first_image = image_batch[0]
-# Notice the pixel values are now in `[0,1]`.
 print(np.min(first_image), np.max(first_image))
 
-num_classes = len(class_names)
+NUM_CLASSES = len(class_names)
 
-model = Sequential(
-    [
-        layers.Rescaling(1.0 / 255, input_shape=(img_height, img_width, 3)),
-        layers.Conv2D(16, 3, padding="same", activation="relu"),
-        layers.MaxPooling2D(),
-        layers.Conv2D(32, 3, padding="same", activation="relu"),
-        layers.MaxPooling2D(),
-        layers.Conv2D(64, 3, padding="same", activation="relu"),
-        layers.MaxPooling2D(),
-        layers.Flatten(),
-        layers.Dense(128, activation="relu"),
-        layers.Dense(num_classes),
-    ]
-)
+model = Sequential([
+    layers.Rescaling(1.0 / 255, input_shape=(IMG_HEIGHT, IMG_WIDTH, 3)),
+    layers.Conv2D(16, 3, padding="same", activation="relu"),
+    layers.MaxPooling2D(),
+    layers.Conv2D(32, 3, padding="same", activation="relu"),
+    layers.MaxPooling2D(),
+    layers.Conv2D(64, 3, padding="same", activation="relu"),
+    layers.MaxPooling2D(),
+    layers.Flatten(),
+    layers.Dense(128, activation="relu"),
+    layers.Dense(NUM_CLASSES),
+])
 
 model.compile(
     optimizer="adam",
@@ -81,10 +69,11 @@ model.compile(
 
 model.summary()
 
-epochs = 1
-history = model.fit(train_ds, validation_data=val_ds, epochs=epochs)
+EPOCHS = 1
+history = model.fit(train_ds, validation_data=val_ds, epochs=EPOCHS)
 
 model.save("./recog.keras")
+
 
 # acc = history.history['accuracy']
 # val_acc = history.history['val_accuracy']

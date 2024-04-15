@@ -1,99 +1,55 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import PIL
-import requests
-from PIL import Image
-import pymongo
+"""Module for predicting emotions from images using a trained TensorFlow model."""
+
 import os
 import io
-import datetime
-from flask import (
-    Flask,
-    render_template,
-    request,
-    redirect,
-    flash,
-    url_for,
-    session,
-    jsonify,
-)
+# import base64
+import numpy as np
+from PIL import Image
 import pymongo
-
-# from pymongo.server_api import ServerApi
-import bcrypt
-from dotenv import load_dotenv
-
-# image imports
-import base64
-from bson import binary
-
 import tensorflow as tf
+from tensorflow.keras.models import load_model
+from dotenv import load_dotenv
+from flask import Flask, request, jsonify
 
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.models import Sequential, load_model
+# Load environment variables and TensorFlow model
+load_dotenv()
+MODEL_PATH = "./recog.keras"
+model = load_model(MODEL_PATH)
 
-import pathlib
+# Configuration constants
+BATCH_SIZE = 32
+IMG_HEIGHT = 180
+IMG_WIDTH = 180
+CLASS_NAMES = ["Angry", "Happy", "Neutral", "Sad", "Surprise"]
 
-# Path to the saved model
-model_path = "./recog.keras"
-
-model = load_model(model_path)
-
-batch_size = 32
-img_height = 180
-img_width = 180
-
-class_names = ["Angry", "Happy", "Neutral", "Sad", "Surprise"]
-
-# ---------------------------------------------------------------
-
-# load credentials and configuration options from .env file
-load_dotenv()  # take environment variables from .env.
-
+# Flask app setup
 app = Flask(__name__)
-
-# Connect to MongoDB
-# connect to the database
-cxn = pymongo.MongoClient(os.getenv("MONGO_URI"))
-db = cxn[os.getenv("MONGO_DBNAME")]
 app.secret_key = os.environ.get("SECRET_KEY", "default_secret_key")
 
+# MongoDB connection
+cxn = pymongo.MongoClient(os.getenv("MONGO_URI"))
+db = cxn[os.getenv("MONGO_DBNAME")]
 
 @app.route("/predict", methods=["POST"])
 def fetch_and_predict():
+    """Receive an image via POST and predict the emotion."""
     if not request.data:
         return jsonify({"error": "No data provided"}), 400
-    # file = request.files['image_data']
 
-    # Fetch an image from MongoDB using its ID
-    # image_data = db.users.find_one({"image_data": binary.Binary(image_id)})
-
-    # Assuming image data is stored as binary data in the 'image' field
     image_bytes = request.data
     image = Image.open(io.BytesIO(image_bytes))
-    image = image.resize((img_height, img_width))
+    image = image.resize((IMG_HEIGHT, IMG_WIDTH))
     image = image.convert("RGB")  # Ensure image is in RGB format
 
-    # Convert image to a numpy array suitable for TensorFlow
     img_array = np.array(image)
-    img_array = np.expand_dims(img_array, axis=0)  # Create a batch
+    img_array = np.expand_dims(img_array, axis=0)  # Create a batch for prediction
 
-    # Prediction
     predictions = model.predict(img_array)
     score = tf.nn.softmax(predictions[0])
-    class_names = [
-        "Angry",
-        "Happy",
-        "Neutral",
-        "Sad",
-        "Surprise",
-    ]  # Update as per your model classes
-
-    predicted_class = class_names[np.argmax(score)]
+    predicted_class = CLASS_NAMES[np.argmax(score)]
     confidence = np.max(score) * 100
-    return jsonify({"predicted_class": predicted_class, "confidence": confidence})
 
+    return jsonify({"predicted_class": predicted_class, "confidence": confidence})
 
 angry_path = "test_photos/angry_guy.jpg"
 
@@ -115,3 +71,4 @@ print(
 if __name__ == "__main__":
     FLASK_PORT = os.getenv("FLASK_PORT", "5000")
     app.run(port=FLASK_PORT)
+    
