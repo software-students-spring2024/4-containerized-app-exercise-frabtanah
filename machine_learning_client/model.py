@@ -54,7 +54,7 @@ def fetch_and_predict():
 angry_path = "test_photos/angry_guy.jpg"
 
 img = tf.keras.utils.load_img(
-    angry_path, target_size=(img_height, img_width)
+    angry_path, target_size=(IMG_HEIGHT, IMG_HEIGHT)
 )
 img_array = tf.keras.utils.img_to_array(img)
 img_array = tf.expand_dims(img_array, 0) # Create a batch
@@ -64,7 +64,7 @@ score = tf.nn.softmax(predictions[0])
 
 print(
     "This image most likely belongs to {} with a {:.2f} percent confidence."
-    .format(class_names[np.argmax(score)], 100 * np.max(score))
+    .format(CLASS_NAMES[np.argmax(score)], 100 * np.max(score))
 )
 
 
