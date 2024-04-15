@@ -1,4 +1,4 @@
-version: '3'
+version: '3.12'
 
 services:
   web-app:
@@ -6,8 +6,8 @@ services:
     ports:
       - "8000:5000"
     environment:
-      - MONGO_DBNAME=example
-      - MONGO_URI=mongodb://localhost:27017/example
+      - MONGO_DBNAME=MoodMapDB
+      - MONGO_URI=mongodb://admin:secret@mongodb:27017
       - FLASK_APP=app.py
       - FLASK_ENV=development
       - FLASK_PORT=8000
@@ -15,9 +15,9 @@ services:
       - ./web-app/.env
     depends_on:
       - mongodb
+      - machine-learning-client
     networks:
       - my_network
-
   mongodb:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
@@ -25,17 +25,23 @@ services:
     image: mongo
     ports:
       - 27017:27017
-    volumes:
-      - mongodb-data:/data/db
-
-  mlclient:
-    build: ./machine-learning-client
     networks:
       - my_network
+    volumes:
+      - mongodb-data:/data/db
+  machine-learning-client:
+    build: ./machine-learning-client
+    ports:
+      - "5000:5000"    
+    env_file:
+      - ./machine-learning-client/.env
+    networks:
+      - my_network
+
 volumes:
   mongodb-data:
 
 networks:
   my_network:
-
+    driver: bridge
 

@@ -1,7 +1,10 @@
 """This module contains the web routes and logic for a Flask web application."""
-
+import sys
 import os
+
 import datetime
+
+import requests
 from flask import Flask, render_template, request, redirect, flash, url_for, session
 import pymongo
 
@@ -24,6 +27,27 @@ cxn = pymongo.MongoClient(os.getenv("MONGO_URI"))
 db = cxn[os.getenv("MONGO_DBNAME")]
 app.secret_key = os.environ.get("SECRET_KEY", "default_secret_key")
 
+# @app.route('/predict-image', methods=['POST'])
+# def predict_image():
+#     # Assuming the image is sent as a file in the request
+#     image_file = request.files['image']
+
+#     # URL of the machine learning client API
+#     api_url = 'http://machine-learning-client:5000/predict'  # Adjust based on your actual service name and port
+
+#     # Preparing the files dict for requests to send as multipart/form-data
+#     files = {'image': (image_file.filename, image_file, image_file.mimetype)}
+
+#     # Making the POST request to the machine learning API
+#     response = requests.post(api_url, files=files)
+
+#     # Handle the response
+#     if response.status_code == 200:
+#         result = response.json()
+#         return jsonify(result)
+#     else:
+#         return jsonify({'error': 'Failed to get prediction'}), response.status_code
+
 @app.route('/save_picture', methods=['POST'])
 def save_picture():
     """
@@ -38,11 +62,20 @@ def save_picture():
         #strip the header from the image data
         header, encoded = image_data.split(",", 1)
         data = base64.b64decode(encoded)
+        
+        api_url = 'http://machine-learning-client:5000/predict'
+        # emote = model.fetch_and_predict(data)
 
+        # Making the POST request to the machine learning API
+        response = requests.post(api_url, data=data)
+
+        emote = response.json().get('predicted_class', 'Unknown')  # Adjust key as per your API's response
+        
         #new assessment entry with the image
         current_date = datetime.datetime.now().strftime("%Y-%m-%d") 
         new_assessment = {
             "image_data": binary.Binary(data),
+            "emotion_predict": emote,
             "currentDate": current_date  
         }
         #pusha new assessment into the assessments array
@@ -241,6 +274,7 @@ def assessments():
                 assessments_list.append({
                     'type': 'image',
                     'image_b64': image_b64,
+                    'emotion_predict': assessment['emotion_predict'],
                     'currentDate': assessment['currentDate']
                 })
             else:
@@ -303,5 +337,5 @@ def assessment():
 
 
 if __name__ == "__main__":
-    FLASK_PORT = os.getenv("FLASK_PORT", "5000")
+    FLASK_PORT = os.getenv("FLASK_PORT", "8000")
     app.run(port=FLASK_PORT)
