@@ -10,12 +10,13 @@ COPY requirements.txt ./
 RUN pip3 install -r requirements.txt
 
 RUN pip3 install matplotlib tensorflow pathlib
-
+RUN pip3 install requests
 # the ADD command is how you add files from your local machine into a Docker image
 # Copy the current directory contents into the container at /app
 ADD . .
 
-
+# expose the port that the Flask app is running on... by default 5000
+EXPOSE 5000
 
 # Run app.py when the container launches
-CMD [ "python3", "-m", "model.py"]
+CMD [ "python3", "model.py"]
