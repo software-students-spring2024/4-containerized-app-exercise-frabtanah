@@ -32,7 +32,7 @@ services:
   machine-learning-client:
     build: ./machine-learning-client
     ports:
-      - "5000:5000"    
+      - "5001:5000"    
     env_file:
       - ./machine-learning-client/.env
     networks:
