@@ -68,7 +68,7 @@ def save_picture():
             if response.status_code == 200:
                 emote = response.json().get("predicted_class", "Unknown")
             else:
-                flash('Failed to get prediction from ML model.', 'error')
+                flash("Failed to get prediction from ML model.", "error")
                 return redirect(url_for("picture"))
         except requests.RequestException as e:
             flash(f"Request failed: {str(e)}", "error")
@@ -273,7 +273,9 @@ def assessments():
         for assessment_item in user["assessments"]:
             # check if the assessment is an image or text
             if "image_data" in assessment_item:
-                image_b64 = base64.b64encode(assessment_item["image_data"]).decode("utf-8")
+                image_b64 = base64.b64encode(assessment_item["image_data"]).decode(
+                    "utf-8"
+                )
                 assessments_list.append(
                     {
                         "type": "image",
