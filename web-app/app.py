@@ -1,20 +1,15 @@
 """This module contains the web routes and logic for a Flask web application."""
-import sys
+
 import os
-
 import datetime
+import base64
 
-import requests
 from flask import Flask, render_template, request, redirect, flash, url_for, session
 import pymongo
-
-# from pymongo.server_api import ServerApi
 import bcrypt
 from dotenv import load_dotenv
-
-# image imports
-import base64
 from bson import binary
+import requests
 
 # load credentials and configuration options from .env file
 load_dotenv()  # take environment variables from .env.
@@ -33,7 +28,8 @@ app.secret_key = os.environ.get("SECRET_KEY", "default_secret_key")
 #     image_file = request.files['image']
 
 #     # URL of the machine learning client API
-#     api_url = 'http://machine-learning-client:5000/predict'  # Adjust based on your actual service name and port
+#     api_url = 'http://machine-learning-client:5000/predict'
+#     Adjust based on your actual service name and port
 
 #     # Preparing the files dict for requests to send as multipart/form-data
 #     files = {'image': (image_file.filename, image_file, image_file.mimetype)}
@@ -48,54 +44,61 @@ app.secret_key = os.environ.get("SECRET_KEY", "default_secret_key")
 #     else:
 #         return jsonify({'error': 'Failed to get prediction'}), response.status_code
 
-@app.route('/save_picture', methods=['POST'])
+
+@app.route("/save_picture", methods=["POST"])
 def save_picture():
     """
     route to save the picture
     """
     if "email" not in session:
         flash("You must be logged in to save a picture.", "error")
-        return redirect(url_for('show_signin'))
+        return redirect(url_for("show_signin"))
 
-    image_data = request.form['image']
+    image_data = request.form["image"]
     if image_data:
-        #strip the header from the image data
-        header, encoded = image_data.split(",", 1)
+        # strip the header from the image data
+        _, encoded = image_data.split(",", 1)
         data = base64.b64decode(encoded)
-        
-        api_url = 'http://machine-learning-client:5000/predict'
+        api_url = "http://machine-learning-client:5000/predict"
         # emote = model.fetch_and_predict(data)
 
         # Making the POST request to the machine learning API
-        response = requests.post(api_url, data=data)
+        try:
+            response = requests.post(api_url, data=data, timeout=10)
+            if response.status_code == 200:
+                emote = response.json().get("predicted_class", "Unknown")
+            else:
+                flash("Failed to get prediction from ML model.", "error")
+                return redirect(url_for("picture"))
+        except requests.RequestException as e:
+            flash(f"Request failed: {str(e)}", "error")
+            return redirect(url_for("picture"))
 
-        emote = response.json().get('predicted_class', 'Unknown')  # Adjust key as per your API's response
-        
-        #new assessment entry with the image
-        current_date = datetime.datetime.now().strftime("%Y-%m-%d") 
+        # new assessment entry with the image
+        current_date = datetime.datetime.now().strftime("%Y-%m-%d")
         new_assessment = {
             "image_data": binary.Binary(data),
             "emotion_predict": emote,
-            "currentDate": current_date  
+            "currentDate": current_date,
         }
-        #pusha new assessment into the assessments array
+        # pusha new assessment into the assessments array
         db.users.update_one(
-            {"email": session['email']},
-            {"$push": {"assessments": new_assessment}}
+            {"email": session["email"]}, {"$push": {"assessments": new_assessment}}
         )
 
-        flash('Picture saved successfully!', 'success')
-        return redirect(url_for('assessments'))
-    else:
-        flash('No picture to save.', 'error')
-        return redirect(url_for('picture'))
+        flash("Picture saved successfully!", "success")
+        return redirect(url_for("assessments"))
+    flash("No picture to save.", "error")
+    return redirect(url_for("picture"))
 
-@app.route('/picture')
+
+@app.route("/picture")
 def picture():
     """
     display picture taking page
     """
-    return render_template('picture.html')
+    return render_template("picture.html")
+
 
 @app.route("/")
 def home():
@@ -253,40 +256,46 @@ def change_pass():
     return render_template("login.html", error=error_message)
 
 
-@app.route('/assessments')
+@app.route("/assessments")
 def assessments():
     """
     route to show assessments
     """
     if "email" not in session:
         flash("You must be logged in to view assessments.", "error")
-        return redirect(url_for('show_signin'))
+        return redirect(url_for("show_signin"))
 
-    email = session['email']
+    email = session["email"]
     user = db.users.find_one({"email": email})
 
     assessments_list = []
     if user and "assessments" in user:
-        for assessment in user['assessments']:
-            #check if the assessment is an image or text
-            if 'image_data' in assessment:
-                image_b64 = base64.b64encode(assessment['image_data']).decode('utf-8')
-                assessments_list.append({
-                    'type': 'image',
-                    'image_b64': image_b64,
-                    'emotion_predict': assessment['emotion_predict'],
-                    'currentDate': assessment['currentDate']
-                })
+        for assessment_item in user["assessments"]:
+            # check if the assessment is an image or text
+            if "image_data" in assessment_item:
+                image_b64 = base64.b64encode(assessment_item["image_data"]).decode(
+                    "utf-8"
+                )
+                assessments_list.append(
+                    {
+                        "type": "image",
+                        "image_b64": image_b64,
+                        "emotion_predict": assessment_item["emotion_predict"],
+                        "currentDate": assessment_item["currentDate"],
+                    }
+                )
             else:
-                assessments_list.append({
-                    'type': 'text',
-                    'mainEmotion': assessment['mainEmotion'],
-                    'subEmotion': assessment['subEmotion'],
-                    'postActivity': assessment['postActivity'],
-                    'currentDate': assessment['currentDate']
-                })
+                assessments_list.append(
+                    {
+                        "type": "text",
+                        "mainEmotion": assessment_item["mainEmotion"],
+                        "subEmotion": assessment_item["subEmotion"],
+                        "postActivity": assessment_item["postActivity"],
+                        "currentDate": assessment_item["currentDate"],
+                    }
+                )
 
-    return render_template('assessments.html', assessments=assessments_list)
+    return render_template("assessments.html", assessments=assessments_list)
 
 
 @app.route("/assessment")

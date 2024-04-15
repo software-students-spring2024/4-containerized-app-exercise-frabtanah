@@ -7,7 +7,16 @@ import pymongo
 import os
 import io
 import datetime
-from flask import Flask, render_template, request, redirect, flash, url_for, session, jsonify
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    flash,
+    url_for,
+    session,
+    jsonify,
+)
 import pymongo
 
 # from pymongo.server_api import ServerApi
@@ -27,7 +36,7 @@ from tensorflow.keras.models import Sequential, load_model
 import pathlib
 
 # Path to the saved model
-model_path = './recog.keras'
+model_path = "./recog.keras"
 
 model = load_model(model_path)
 
@@ -37,7 +46,7 @@ img_width = 180
 
 class_names = ["Angry", "Happy", "Neutral", "Sad", "Surprise"]
 
-#---------------------------------------------------------------
+# ---------------------------------------------------------------
 
 # load credentials and configuration options from .env file
 load_dotenv()  # take environment variables from .env.
@@ -50,7 +59,8 @@ cxn = pymongo.MongoClient(os.getenv("MONGO_URI"))
 db = cxn[os.getenv("MONGO_DBNAME")]
 app.secret_key = os.environ.get("SECRET_KEY", "default_secret_key")
 
-@app.route('/predict', methods=['POST'])
+
+@app.route("/predict", methods=["POST"])
 def fetch_and_predict():
     if not request.data:
         return jsonify({"error": "No data provided"}), 400
@@ -58,12 +68,12 @@ def fetch_and_predict():
 
     # Fetch an image from MongoDB using its ID
     # image_data = db.users.find_one({"image_data": binary.Binary(image_id)})
-    
+
     # Assuming image data is stored as binary data in the 'image' field
     image_bytes = request.data
     image = Image.open(io.BytesIO(image_bytes))
     image = image.resize((img_height, img_width))
-    image = image.convert('RGB')  # Ensure image is in RGB format
+    image = image.convert("RGB")  # Ensure image is in RGB format
 
     # Convert image to a numpy array suitable for TensorFlow
     img_array = np.array(image)
@@ -72,11 +82,18 @@ def fetch_and_predict():
     # Prediction
     predictions = model.predict(img_array)
     score = tf.nn.softmax(predictions[0])
-    class_names = ['Angry', 'Happy', 'Neutral', "Sad", "Surprise"]  # Update as per your model classes
+    class_names = [
+        "Angry",
+        "Happy",
+        "Neutral",
+        "Sad",
+        "Surprise",
+    ]  # Update as per your model classes
 
     predicted_class = class_names[np.argmax(score)]
     confidence = np.max(score) * 100
     return jsonify({"predicted_class": predicted_class, "confidence": confidence})
+
 
 if __name__ == "__main__":
     FLASK_PORT = os.getenv("FLASK_PORT", "5000")
