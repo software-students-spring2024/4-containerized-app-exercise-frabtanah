@@ -17,5 +17,8 @@ However, with this app you can now take a picture and save it to your profile an
 
 
 ## To run our project, use 
-```docker-compose up --build --force-recreate``` to build and run.
-Then navigate to http://0.0.0.0:5000 to see the front end of the web app running and interact with our app. 
+- ```docker-compose up --build --force-recreate``` to build and run. 
+- This builds and runs the entire project in three docker containers.
+- Then navigate to http://0.0.0.0:8000 to see the front end of the web app running and interact with our app. 
+- However, we were having a slight issue in facilitating communication through the web-app and machine-learning-client.
+- Therefore, to test our machine-learning-client with a sample angry photo we have provided, navigate to machine-learning-client directory and run ```python3 model.py```

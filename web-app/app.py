@@ -59,27 +59,29 @@ def save_picture():
         # strip the header from the image data
         _, encoded = image_data.split(",", 1)
         data = base64.b64decode(encoded)
-        api_url = "http://machine-learning-client:5000/predict"
+        # api_url = "http://machine-learning-client:5000/predict"
         # emote = model.fetch_and_predict(data)
+        # response = requests.post(api_url, data=data, timeout=10)
+        # emote = response.json().get("predicted_class", "Unknown")
 
         # Making the POST request to the machine learning API
-        try:
-            response = requests.post(api_url, data=data, timeout=10)
-            if response.status_code == 200:
-                emote = response.json().get("predicted_class", "Unknown")
-            else:
-                flash("Failed to get prediction from ML model.", "error")
-                return redirect(url_for("picture"))
-        except requests.RequestException as e:
-            flash(f"Request failed: {str(e)}", "error")
-            return redirect(url_for("picture"))
+        # try:
+        #     response = requests.post(api_url, data=data, timeout=10)
+        #     if response.status_code == 200:
+        #         emote = response.json().get("predicted_class", "Unknown")
+        #     else:
+        #         flash("Failed to get prediction from ML model.", "error")
+        #         return redirect(url_for("assessments"))
+        # except requests.RequestException as e:
+        #     flash(f"Request failed: {str(e)}", "error")
+        #     return redirect(url_for("assessments"))
 
         # new assessment entry with the image
         current_date = datetime.datetime.now().strftime("%Y-%m-%d")
         new_assessment = {
             "image_data": binary.Binary(data),
-            "emotion_predict": emote,
-            "currentDate": current_date,
+            # "emotion_predict": emote,
+            "currentDate": current_date
         }
         # pusha new assessment into the assessments array
         db.users.update_one(
@@ -280,7 +282,7 @@ def assessments():
                     {
                         "type": "image",
                         "image_b64": image_b64,
-                        "emotion_predict": assessment_item["emotion_predict"],
+                        # "emotion_predict": assessment_item["emotion_predict"],
                         "currentDate": assessment_item["currentDate"],
                     }
                 )
