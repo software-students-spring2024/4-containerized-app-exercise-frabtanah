@@ -9,7 +9,7 @@ import pymongo
 import bcrypt
 from dotenv import load_dotenv
 from bson import binary
-import requests
+# import requests
 
 # load credentials and configuration options from .env file
 load_dotenv()  # take environment variables from .env.
